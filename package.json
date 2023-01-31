@@ -1,0 +1,25 @@
+{
+  "name": "zgraph",
+  "displayName": "zgraph",
+  "description": "graphs stuff",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "zgraph",
+      "aliases": ["ZGraph", "zgraph"],
+      "extensions": [".zg",".zgr",".zgraph"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "zgraph",
+      "scopeName": "source.zg",
+      "path": "./syntaxes/zgraph.tmLanguage.json"
+    }]
+  }
+}
