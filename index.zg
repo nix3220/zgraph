@@ -1,0 +1,8 @@
+start{
+    x = call : returnPointValues(5)
+}
+
+method : returnPointValues(multiplier: number): point{
+    
+    return : point(multiplier * 2, multiplier * 3)
+}

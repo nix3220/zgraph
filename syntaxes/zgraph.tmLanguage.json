@@ -6,14 +6,59 @@
 			"include": "#keywords"
 		},
 		{
+			"include": "#ctrl-statements"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#numbers"
+		},
+		{
+			"include": "#operators"
+		},
+		{
+			"include": "#punctuation"
+		},
+		{
+			"include": "#variables"
+		},
+		{
 			"include": "#strings"
 		}
 	],
 	"repository": {
+		"comments": {
+			"name": "comment.line.double-slash.zgraph",
+			"begin": "//",
+			"end": "$"
+		},
+		"numbers": {
+			"name": "constant.numeric.zgraph",
+			"match": "\\b\\d+\\b"
+		},
+		"operators": {
+			"name": "keyword.operator.zgraph",
+			"match": "\\b(\\+|\\-|\\*|\\/|\\=|\\<|\\>|\\&|\\|)\\b"
+		},
+		"punctuation": {
+			"name": "punctuation.definition.zgraph",
+			"match": "\\(|\\)|\\{|\\}|\\[|\\]|\\,|\\.|\\;"
+		},
+		"variables": {
+			"name": "variable.other.zgraph",
+			"match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+		},
+		"ctrl-statements": {
+			"patterns": [{
+				"name": "keyword.control",
+				"match": "\\b(start|export|title|import|printVar)\\b"
+			}]
+		},
 		"keywords": {
 			"patterns": [{
-				"name": "keyword.control.zgraph",
-				"match": "\\b(if|while|for|return)\\b"
+				"name": "keyword.other.zgraph",
+				"match": "\\b(point|seg|line|graph|to|from|at|method|print|call|number)\\b"
 			}]
 		},
 		"strings": {
