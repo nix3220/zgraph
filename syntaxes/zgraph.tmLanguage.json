@@ -52,13 +52,13 @@
 		"ctrl-statements": {
 			"patterns": [{
 				"name": "keyword.control",
-				"match": "\\b(start|export|title|import|printVar)\\b"
+				"match": "\\b(start|export|title|import|printVar|return)\\b"
 			}]
 		},
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.other.zgraph",
-				"match": "\\b(point|seg|segment|line|graph|to|from|at|method|print|call|number|tri|triangle|quad|quadrilateral|poly|polygon)\\b"
+				"match": "\\b(point|seg|segment|line|graph|method|print|call|number|tri|triangle|quad|quadrilateral|poly|polygon)\\b"
 			}]
 		},
 		"strings": {
