@@ -58,7 +58,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.other.zgraph",
-				"match": "\\b(point|seg|line|graph|to|from|at|method|print|call|number)\\b"
+				"match": "\\b(point|seg|segment|line|graph|to|from|at|method|print|call|number|tri|triangle|quad|quadrilateral|poly|polygon)\\b"
 			}]
 		},
 		"strings": {

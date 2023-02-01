@@ -11,6 +11,15 @@ let variables = [];
 let functions = [];
 let title = "My ZGraph";
 
+class Variable{
+    constructor(type){
+        this.type = type;
+    }
+    toString(){
+        return this.name;
+    }
+}
+
 class Graph{
     constructor(lines){
         this.lines = lines;
@@ -22,6 +31,30 @@ class Parameter{
         this.name = name;
         this.value = value;
         this.type = type;
+    }
+}
+
+class Triangle extends Variable{
+    constructor(name, points){
+        super(name, "triangle");
+        this.name = name;
+        this.points = points;
+    }
+}
+
+class Quadrilateral extends Variable{
+    constructor(name, points){
+        super(name, "quadrilateral");
+        this.name = name;
+        this.points = points;
+    }
+}
+
+class Polygon extends Variable{
+    constructor(name, points){
+        super(name, "polygon");
+        this.name = name;
+        this.points = points;
     }
 }
 
@@ -54,15 +87,6 @@ class NumberVariable{
     }
 }
 
-class Variable{
-    constructor(type){
-        this.type = type;
-    }
-    toString(){
-        return this.name;
-    }
-}
-
 class Point extends Variable{
     constructor(name,x,y){
         super(name, "point");
@@ -77,11 +101,10 @@ class Point extends Variable{
 }
 
 class Segment extends Variable{
-    constructor(name,point1,point2){
+    constructor(name,points){
         super(name, "segment");
         this.name = name;
-        this.point1 = point1;
-        this.point2 = point2;
+        this.points = points;
     }
 
     toString(){
@@ -110,6 +133,9 @@ function InitLines(){
     }
     programLines = lines;
     FindAllFunctions();
+}
+
+function InitMainGraph(lines){
     for (let i = 0; i < lines.length; i++) {
         for (let j = 0; j < lines[i].length; j++) {
             if(lines[i][j].value == "{" && lines[i][j-1].value == "start"){
@@ -143,6 +169,7 @@ function FindAllFunctions(){
             }
         }
     }
+    InitMainGraph(programLines);
 }
 
 function CallFunction(funcName, params){
@@ -184,8 +211,13 @@ function InterpretFunctionGraph(graph, func){
 function ConvertToMathAndEvaluateGlobal(line){
     let mathLine = "";
     for (let i = 0; i < line.length; i++) {
-        if(variables.find(x => x.name == line[i].value) != undefined){
-            mathLine += variables.find(x => x.name == line[i].value).value.toString();
+        if(variables.length > 0){
+            if(variables.find(x => x.name == line[i].value) != undefined){
+                mathLine += variables.find(x => x.name == line[i].value).value.toString();
+            }
+            else{
+                mathLine += line[i].value;
+            }
         }
         else{
             mathLine += line[i].value;
@@ -248,7 +280,6 @@ function HandleReturnValue(line, func){
         let xVal = line.slice(start,breakPoint);
         let yVal = line.slice(breakPoint+1,end);
 
-        console.log();
         let x = ConvertToMathAndEvaluate(xVal, func);
         let y = ConvertToMathAndEvaluate(yVal, func);
         return new Point("N/A",x,y);
@@ -324,14 +355,29 @@ function InterpretMainGraph(graph){
                 let params = [];
                 let paramStart = FindNext(i,j,"(");
                 let paramEnd = FindNext(i,j,")");
-                params.push(ConvertToMathAndEvaluateGlobal(graph.lines[i].slice(paramStart.token+1,FindNext(i,paramStart.token,",").token)));
-                for (let k = paramStart.token+1; k < paramEnd.token; k++) {
+                
+                for (let k = paramStart.token; k < paramEnd.token; k++) {
                     //get sections of the linme between commas
-                    if(graph.lines[i][k].value == ","){
-                        let param = graph.lines[i].slice(paramStart.token+1,k);
+                    if(graph.lines[i][k].value == "," || graph.lines[i][k].value == "("){
+                        let param;
+                        console.log("fn: " + FindNextInLine(graph.lines[i],k,","));
+                        if(FindNextInLine(graph.lines[i],k+1,",") != undefined){
+                            let comma = FindNextInLine(graph.lines[i],k+1,",");
+                            console.log("found comma at " + comma + " while k is: " + k);
+                            param = graph.lines[i].slice(k+1,FindNextInLine(graph.lines[i],k+1,","));
+                        }
+                        else{
+                            param = graph.lines[i].slice(k+1,paramEnd.token);
+                        }
+                        param = param.filter(x => x.value != "," && x.value != "(" && x.value != ")");
                         params.push(ConvertToMathAndEvaluateGlobal(param));
-                        paramStart.token = k;
+                        paramStart.token = k+1;
                     }
+                }
+
+                if(FindNextInLine(graph.lines[i],paramStart.token,",") == undefined){
+                    console.log("no commas");
+                    params.push(ConvertToMathAndEvaluateGlobal(graph.lines[i].slice(paramStart.token+1,FindNext(i,paramStart.token,",").token)));
                 }
 
                 params.forEach((param, index) => {
@@ -357,14 +403,14 @@ function InterpretMainGraph(graph){
                 }
                 variables = variables.filter(x => x != undefined && x != null);
             }
+            variables = variables.filter(x => x != undefined && x != null);
         }
     }
 }
 
 function HandlePrintVar(line, j){
 
-    //console.log(JSON.stringify(variables, null, 2));
-    console.log(variables);
+    console.log(JSON.stringify(variables, null, 2));
 }
 
 function HandleImport(line, j){
@@ -411,21 +457,7 @@ function HandleExport(line, j){
 }
 
 function HandlePrint(line, j){
-    let output = line[j+2].value;
-    if(VariableExists(line[j+2].value)){
-        output = GetVariable(line[j+2].value).toString();
-    }
-    for (let i = j+2; i < line.length; i++) {
-        if(line[i].value == "+"){
-            if(VariableExists(line[i+1].value)){
-                output += GetVariable(line[i+1].value).toString();
-            }
-            else{
-                output += line[i+1].value;
-            }
-        }
-    }
-    output = output.replace(/"/g, "");
+    let output = ConvertToMathAndEvaluateGlobal(line.slice(j+2,FindNext(line,j+2,")")));
     //output = output.replace(/_/g, " ");
     console.log(output);
 }
@@ -455,63 +487,79 @@ function GetVariableIndex(name){
     }
 }
 
+function GetPoints(line, token, numPoints){
+    let points = [];
+    let point = new Point();
+    let pointNum = 0;
+    let pointStart = token;
+    let pointEnd = token;
+
+    pointStart = FindNextInLine(line, token, "(");
+    pointEnd = FindNextInLine(line, token, ")");
+    if(pointStart != undefined && pointEnd != undefined){
+        for(let i = pointStart; i <= pointEnd; i++){
+            if(line[i].value == "," || line[i].value == ")"){
+                point = new Point("N/A", GetVariable(line[i-1].value).x, GetVariable(line[i-1].value).y);
+                points.push(point);
+            }
+        }
+    }
+
+    return numPoints > 0 ? points.slice(0,numPoints) : points;
+}
+
 function HandleAssignment(line, j){
     var newVariable;
 
     let varExists = VariableExists(line[j-1].value);
     let i = j-1;
 
-    if(line[j+1].value == "seg"){
-        var point1;
-        var point2;
-
-        if(VariableExists(line[j+3].value)){
-            point1 = {x: GetVariable(line[j+3].value).x, y: GetVariable(line[j+3].value).y};
-        }
-        else{
-            var x;
-            var y;
-            if(!isNaN(line[j+3].value)){
-                x = line[j+3].value;
-            }
-            else{
-                x = 0;
-            }
-
-            if(!isNaN(line[j+5].value)){
-                y = line[j+5].value;
-            }
-            else{
-                y = 0;
-            }
-            point1 = {x: x, y: x};
-            point2 = {x: y, y: y};
-        }
-
-        if(VariableExists(line[j+5].value)){
-            point2 = {x: GetVariable(line[j+5].value).x, y: GetVariable(line[j+5].value).y};
-        }
-
-        newVariable = new Segment(line[j-1].value, point1, point2);
+    if(line[j+1].value == "seg" || line[j+1].value == "segment"){
+        let points = GetPoints(line, j, 2);
+        newVariable = new Segment(line[j-1].value, points);
+        newVariable.type = "segment";
+    }
+    else if(line[j+1].value == "tri" || line[j+1].value == "triangle"){
+        let points = GetPoints(line, j, 3);
+        newVariable = new Triangle(line[j-1].value, points);
+        newVariable.type = "triangle";
+    }
+    else if(line[j+1].value == "quad" || line[j+1].value == "quadrilateral"){
+        let points = GetPoints(line, j, 4);
+        newVariable = new Quadrilateral(line[j-1].value, points);
+        newVariable.type = "quadrilateral";
+    }
+    else if(line[j+1].value == "poly" || line[j+1].value == "polygon"){
+        let points = GetPoints(line, j, -1);
+        newVariable = new Polygon(line[j-1].value, points);
+        newVariable.type = "polygon";
     }
     else if(line[j+1].value == "call"){
 
     }
     else if(line[j+1].value == "point"){
-        newVariable = new Point(line[j-1].value, line[j+3].value, line[j+5].value);
+        let p = HandleDynamicPoint(line, j);
+        newVariable = new Point(line[j-1].value, p.x, p.y);
+        newVariable.type = "point";
     }
     else if(line[j].value == ":" && line[j+1].value == "("){
         varExists = VariableExists(line[j-2].value);
         i = j-2;
-        newVariable = new Point(line[j-2].value, line[j+2].value, line[j+4].value);
+        let p = HandleDynamicPoint(line, j);
+        newVariable = new Point(line[j-2].value, p.x, p.y);
+        newVariable.type = "point";
     }
     else if(line[j+1].value == "("){
-        newVariable = new Point(line[j-1].value, line[j+2].value, line[j+4].value);
+        let p = HandleDynamicPoint(line, j);
+        newVariable = new Point(line[j-1].value, p.x, p.y);
+        newVariable.type = "point";
     }
     else if(line[j].value == ":" && line[j-1].value == ":"){
         varExists = VariableExists(line[j+1].value);
         i = j+1;
-        newVariable = new Point(line[j+1].value, line[j-5].value, line[j-3].value);
+        let p = HandleDynamicPoint(line, j);
+        newVariable = new Point(line[j+1].value, p.x, p.y);
+        newVariable.type = "point";
     }
     else{
         if(ConvertToMathAndEvaluateGlobal(line.slice(j+1, line.length)) != undefined){
@@ -520,8 +568,8 @@ function HandleAssignment(line, j){
         else{
             newVariable = new NumberVariable(line[j-1].value, 0);
         }
+        newVariable.type = "number";
     }
-    
     if(varExists){
         console.log("Variable already exists, overwriting");
         variables[GetVariableIndex(line[i].value)] = newVariable;
@@ -531,6 +579,33 @@ function HandleAssignment(line, j){
     }
 }
 
+function HandleDynamicPoint(line, j){
+    let start = 0
+        let breakPoint = 0
+        let end = 0
+
+        for (let i = 0; i < line.length; i++) {
+            if(line[i].value == "("){
+                start = i+1;
+            }
+            else if(line[i].value == ","){
+                breakPoint = i;
+            }
+            else if(line[i].value == ")"){
+                end = i;
+            }
+        }
+
+        let xVal = line.slice(start,breakPoint);
+        let yVal = line.slice(breakPoint+1,end);
+
+        let x = ConvertToMathAndEvaluateGlobal(xVal);
+        let y = ConvertToMathAndEvaluateGlobal(yVal);
+
+        return {x: x, y: y};
+}
+
+
 function VariableExists(name){
     for (let i = 0; i < variables.length; i++) {
         if(variables[i].name == name){
@@ -538,6 +613,15 @@ function VariableExists(name){
         }
     }
     return false;
+}
+
+function FindNextInLine(tokens, position, str){
+    for (let j = position; j < tokens.length; j++) {
+        if(tokens[j].value == str){
+            return j;
+        }
+    }
+    return undefined
 }
 
 function FindNext(outer, inner, str){
@@ -551,6 +635,6 @@ function FindNext(outer, inner, str){
         }
         inLine = false;
     }
-    return "found nothing"
+    return undefined
 }
 

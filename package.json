@@ -9,6 +9,33 @@
   "categories": [
     "Programming Languages"
   ],
+  "icon": "https://www.shareicon.net/download/2016/10/20/846399_letter_512x512.png",
+  "publisher": "Nathaniel Stauffer",
+  "capabilities": {
+    "debuggers": [
+      {
+        "type": "zgraph",
+        "label": "zgraph",
+        "languages": [
+          "zgraph"
+        ]
+      }
+    ],
+    "completionProvider": {
+      "resolveProvider": true,
+      "triggerCharacters": [
+        ".",
+        "(",
+        "[",
+        "\"",
+        "'",
+        "`",
+        "/",
+        "@",
+        "<"
+      ]
+    }
+  },
   "contributes": {
     "languages": [{
       "id": "zgraph",
