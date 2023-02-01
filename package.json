@@ -3,6 +3,12 @@
   "displayName": "zgraph",
   "description": "graphs stuff",
   "version": "0.0.1",
+  "license": "MIT",
+  "author": "NixStudio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nix3220/zgraph"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -10,7 +16,7 @@
     "Programming Languages"
   ],
   "icon": "icon.png",
-  "publisher": "Nathaniel Stauffer",
+  "publisher": "NixStudio",
   "capabilities": {
     "debuggers": [
       {
