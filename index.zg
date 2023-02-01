@@ -1,8 +1,14 @@
 start{
-    x = call : returnPointValues(5)
+    y = 2
+    x = 3
+    z = call : multiplyBySeventeen(5)
+    printVar
 }
 
 method : returnPointValues(multiplier: number): point{
-    
     return : point(multiplier * 2, multiplier * 3)
+}
+
+method : multiplyBySeventeen(input: number): number{
+    return : input * 17
 }

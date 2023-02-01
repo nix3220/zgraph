@@ -181,6 +181,27 @@ function InterpretFunctionGraph(graph, func){
 
 }
 
+function ConvertToMathAndEvaluateGlobal(line){
+    let mathLine = "";
+    for (let i = 0; i < line.length; i++) {
+        if(variables.find(x => x.name == line[i].value) != undefined){
+            mathLine += variables.find(x => x.name == line[i].value).value.toString();
+        }
+        else{
+            mathLine += line[i].value;
+        }
+    }
+    mathLine = mathLine.replace("undefined", '');
+
+    if(math.evaluate(mathLine) != undefined){
+        return math.evaluate(mathLine);
+    }
+    else{
+        console.log("Error evaluating math expression: " + mathLine);
+        return;
+    }
+}
+
 function ConvertToMathAndEvaluate(line, func){
     let mathLine = "";
     for (let i = 0; i < line.length; i++) {
@@ -299,27 +320,42 @@ function InterpretMainGraph(graph){
                 }
 
                 let funcName = graph.lines[i][j+2].value;
-                let funcReturnType = FindNext(i,j, "{").token-1;
+                let funcReturnType = functions.find(x => x.name == funcName).returnType;
                 let params = [];
                 let paramStart = FindNext(i,j,"(");
                 let paramEnd = FindNext(i,j,")");
+                params.push(ConvertToMathAndEvaluateGlobal(graph.lines[i].slice(paramStart.token+1,FindNext(i,paramStart.token,",").token)));
                 for (let k = paramStart.token+1; k < paramEnd.token; k++) {
-                    if(graph.lines[i][k].value != ","){
-                        params.push(graph.lines[i][k].value);
+                    //get sections of the linme between commas
+                    if(graph.lines[i][k].value == ","){
+                        let param = graph.lines[i].slice(paramStart.token+1,k);
+                        params.push(ConvertToMathAndEvaluateGlobal(param));
+                        paramStart.token = k;
                     }
                 }
+
+                params.forEach((param, index) => {
+                    console.log(param);
+                })
+
                 let returnValue = CallFunction(funcName, params);
-                if(assignedVarIndex != -1){
-                    if(funcReturnType != undefined){
-                        if(funcReturnType == "point"){
-                            newVar = new Point(graph.lines[i][j-2].value, returnValue.x, returnValue.y);
-                        }
-                        else if(funcReturnType == "number"){
-                            newVar = new NumberVariable(graph.lines[i][j-2].value, returnValue);
-                        }
+                
+                if(funcReturnType != undefined){
+                    if(funcReturnType == "point"){
+                        newVar = new Point(graph.lines[i][j-2].value, returnValue.x, returnValue.y);
                     }
+                    else if(funcReturnType == "number"){
+                        newVar = new NumberVariable(graph.lines[i][j-2].value, returnValue);
+                    }
+                }
+
+                if(assignedVarIndex != -1){
                     variables[assignedVarIndex] = newVar;
                 }
+                else{
+                    variables.push(newVar);
+                }
+                variables = variables.filter(x => x != undefined && x != null);
             }
         }
     }
@@ -327,8 +363,8 @@ function InterpretMainGraph(graph){
 
 function HandlePrintVar(line, j){
 
+    //console.log(JSON.stringify(variables, null, 2));
     console.log(variables);
-
 }
 
 function HandleImport(line, j){
@@ -448,7 +484,6 @@ function HandleAssignment(line, j){
             else{
                 y = 0;
             }
-
             point1 = {x: x, y: x};
             point2 = {x: y, y: y};
         }
@@ -458,6 +493,9 @@ function HandleAssignment(line, j){
         }
 
         newVariable = new Segment(line[j-1].value, point1, point2);
+    }
+    else if(line[j+1].value == "call"){
+
     }
     else if(line[j+1].value == "point"){
         newVariable = new Point(line[j-1].value, line[j+3].value, line[j+5].value);
@@ -474,6 +512,14 @@ function HandleAssignment(line, j){
         varExists = VariableExists(line[j+1].value);
         i = j+1;
         newVariable = new Point(line[j+1].value, line[j-5].value, line[j-3].value);
+    }
+    else{
+        if(ConvertToMathAndEvaluateGlobal(line.slice(j+1, line.length)) != undefined){
+            newVariable = new NumberVariable(line[j-1].value, ConvertToMathAndEvaluateGlobal(line.slice(j+1, line.length)));
+        }
+        else{
+            newVariable = new NumberVariable(line[j-1].value, 0);
+        }
     }
     
     if(varExists){
